@@ -1,18 +1,33 @@
 package com.ashes.web.project.dto;
 
-import com.ashes.web.project.dto.RoleDto;
+import com.ashes.web.project.model.Role;
+import com.ashes.web.project.model.User;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.time.LocalDate;
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Getter
+@Setter
 public class UserDto {
-    private  String username;
-    private  String name;
-    private  String lastname;
-    private  String email;
-    private  String phone;
-    private  short age;
+    private Long id;
+    private String login;
+    private String password;
+    private String firstName;
+    private String lastName;
+    @OneToMany
+    private Role role;
+
+    public UserDto(User user) {
+        this.id = user.getId();
+        this.login = user.getLogin();
+        this.password = user.getPassword();
+        this.role = user.getRole();
+        this.firstName = user.getFirstName();
+        this.lastName = user.getLastName();
+
+    }
+
+
 }

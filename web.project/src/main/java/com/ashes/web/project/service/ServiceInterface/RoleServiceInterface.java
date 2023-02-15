@@ -11,5 +11,5 @@ public interface RoleServiceInterface {
     ResponseEntity<List<RoleDto>> getAll();
     Boolean checkExistRole(Long id);
     // temp
-    ResponseEntity<Role> add(Role role);
+    ResponseEntity<Role> add(Role Role);
 }

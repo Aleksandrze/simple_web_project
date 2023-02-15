@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class RoleService  implements RoleServiceInterface {
+public class RoleService implements RoleServiceInterface {
 
     private final RoleRepository roleRepository;
 
@@ -47,7 +47,8 @@ public class RoleService  implements RoleServiceInterface {
 
     // temp method
     @Override
-    public ResponseEntity<Role> add(Role role) {
-        return ResponseEntity.ok().body(roleRepository.save(role));
+    public ResponseEntity<Role> add(Role tRole) {
+        return ResponseEntity.ok().body(roleRepository.save(tRole));
     }
+
 }
