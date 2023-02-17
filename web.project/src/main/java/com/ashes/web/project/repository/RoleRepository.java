@@ -15,6 +15,5 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
     @Query("select new com.ashes.web.project.dto.RoleDto(r) from Role r")
     List<RoleDto> findAllAndReturnDto();
 
-    @Query("select r from Role r where r.id = ?1")
     Optional<Role> findById(Long id);
 }

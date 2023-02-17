@@ -8,7 +8,7 @@ import com.ashes.web.project.dto.RoleDto;
 import com.ashes.web.project.dto.UserDto;
 import com.ashes.web.project.model.User;
 import com.ashes.web.project.repository.UserRepository;
-import com.ashes.web.project.service.ServiceInterface.UserServiceInterface;
+import com.ashes.web.project.service.interfaces.UserServiceInterface;
 import jakarta.security.auth.message.AuthException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

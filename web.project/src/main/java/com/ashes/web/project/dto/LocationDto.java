@@ -14,7 +14,7 @@ public class LocationDto {
     private Long id;
     private String name;
     private String description;
-    private short maxNumbers;
+    private short maxCapacity;
     private short filled;
 
     public LocationDto(Location location) {
@@ -22,6 +22,6 @@ public class LocationDto {
         this.description = location.getDescription();
         this.name = location.getName();;
         this.filled = location.getFilled();
-        this.maxNumbers = location.getMaxNumbers();
+        this.maxCapacity = location.getMaxCapacity();
     }
 }

@@ -2,7 +2,6 @@ package com.ashes.web.project.controller;
 
 import com.ashes.web.project.dto.AnimalDto;
 import com.ashes.web.project.service.AnimalService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,27 +17,27 @@ public class AnimalController {
 
     @PostMapping()
     public ResponseEntity<String> add( @RequestBody AnimalDto animalDto){
-        return animalService.add(animalDto);
+        return animalService.saveAnimal(animalDto);
     }
 
     @GetMapping()
     public ResponseEntity<List<AnimalDto>> getAll() {
-        return animalService.getAll();
+        return animalService.getAllAnimals();
     }
 
-    @GetMapping("/get/{name}")
-    public ResponseEntity<AnimalDto> getByName(@Valid @PathVariable("name") String name) {
-        return animalService.getByName(name);
+    @GetMapping("/get")
+    public ResponseEntity<AnimalDto> getByName(@RequestParam String name) {
+        return animalService.getAnimalByShelterIdentifier(name);
     }
 
-    @GetMapping("/get/location/{location}")
-    public ResponseEntity<List<AnimalDto>> getByLocation(@Valid @PathVariable("location") String location) {
-        return animalService.getAllByLocation(location);
+    @GetMapping("/get/location")
+    public ResponseEntity<List<AnimalDto>> getByLocation(@RequestParam String location) {
+        return animalService.getAllAnimalsByLocation(location);
     }
 
-    @PatchMapping()
+    @PutMapping()
     public ResponseEntity<String> update(@RequestBody AnimalDto animalDto){
-        return animalService.editProfile(animalDto);
+        return animalService.modifyAnimal(animalDto);
     }
 
 

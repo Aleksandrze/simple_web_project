@@ -3,7 +3,7 @@ package com.ashes.web.project.service;
 import com.ashes.web.project.dto.RoleDto;
 import com.ashes.web.project.model.Role;
 import com.ashes.web.project.repository.RoleRepository;
-import com.ashes.web.project.service.ServiceInterface.RoleServiceInterface;
+import com.ashes.web.project.service.interfaces.RoleServiceInterface;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

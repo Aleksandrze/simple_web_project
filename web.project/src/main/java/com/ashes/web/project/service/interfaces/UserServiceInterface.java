@@ -1,4 +1,4 @@
-package com.ashes.web.project.service.ServiceInterface;
+package com.ashes.web.project.service.interfaces;
 
 
 import com.ashes.web.project.domain.JwtRequest;

@@ -14,18 +14,20 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class AnimalDto {
     private Long id;
-    private  String name;
-    private  String location;
-    private  String status;
-    private  String description;
-    private  LocalDate birthdate;
+    private String shelterIdentifier;
+    private String location;
+    private String status;
+    private String description;
+    private LocalDate birthdate;
+    private String firstName;
 
     public AnimalDto(Animal animal) {
         this.id = animal.getId();
-        this.name = animal.getName();
+        this.shelterIdentifier = animal.getShelterIdentifier();
         this.location = animal.getLocation().getName();
-        this.status = animal.getStatus().getStatus();
+        this.status = animal.getPositionAnimalToShelter().getStatus();
         this.description = animal.getDescription();
         this.birthdate = animal.getBirthdate();
+        this.firstName = animal.getFirstName();
     }
 }

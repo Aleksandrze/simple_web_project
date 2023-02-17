@@ -16,13 +16,16 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
     List<AnimalDto> findAllAndReturnDto();
 
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a where a.name = :name")
-    Optional<AnimalDto> findByNameAndReturnDto(String name);
+    Optional<AnimalDto> findByNameAndReturnDto(String shelterIdentifier);
 
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a join a.location l where l.name = :locationName")
     List<AnimalDto> findAllByLocation(String locationName);
 
     Optional<Animal> findById(Long id);
 
+    @Query("select a from Animal a where a.shelterIdentifier = :shelterIdentifier")
+    Optional<Animal> findByShelterIdentifier(String shelterIdentifier);
+
     @Query("select a from Animal a where a.name= :name and a.id <> :id")
-    Optional<Animal> findByNameWithDifferentId(String name, Long id);
+    Optional<Animal> findByNameWithDifferentId(String shelterIdentifier, Long id);
 }

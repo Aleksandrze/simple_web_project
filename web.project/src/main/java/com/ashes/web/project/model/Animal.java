@@ -1,9 +1,12 @@
 package com.ashes.web.project.model;
 
 import com.ashes.web.project.dto.AnimalDto;
-import com.ashes.web.project.enumeration.Status;
+import com.ashes.web.project.enumeration.PositionAnimalToShelter;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -17,32 +20,25 @@ public class Animal {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @Column(unique = true)
-    private String name;
+    private String shelterIdentifier;
     @ManyToOne
     @JoinColumn(name = "location_id")
     private Location location;
-    private Status status;
+    private PositionAnimalToShelter positionAnimalToShelter;
     private String description;
     private LocalDate birthdate;
     //private String category;
+    @Column(columnDefinition = "-")
+    private String firstName;
 
     public Animal(AnimalDto animalDto, Location location) {
         this.id = animalDto.getId();
-        this.name = animalDto.getName();
+        this.shelterIdentifier = animalDto.getShelterIdentifier();
         this.location = location;
-        this.status = Status.valueOf(animalDto.getStatus());
-        this.description =animalDto.getDescription();
+        this.positionAnimalToShelter = PositionAnimalToShelter.valueOf(animalDto.getStatus());
+        this.description = animalDto.getDescription();
         this.birthdate = animalDto.getBirthdate();
-    }
-
-
-    public Animal convert(Animal animal, AnimalDto animalDto){
-        animal.id = animalDto.getId();
-        animal.name = animalDto.getName();;
-        animal.status = Status.valueOf(animalDto.getStatus());
-        animal.description =animalDto.getDescription();
-        animal.birthdate = animalDto.getBirthdate();
-        return animal;
+        this.firstName = animalDto.getFirstName();
     }
 
 

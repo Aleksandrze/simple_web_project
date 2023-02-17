@@ -34,8 +34,7 @@ public class JwtProvider {
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(String.valueOf(user.getId())) // id
-                .claim("login", user.getLogin()) // login
+                .setSubject(String.valueOf(user.getLogin())) // login
                 .claim("role", user.getRole()) // rol
                 .setExpiration(Date.from(LocalDateTime.now().plusMinutes(15).atZone(ZoneId.systemDefault()).toInstant()))
                 .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(String.valueOf(jwtAccessSecret))))
@@ -46,9 +45,8 @@ public class JwtProvider {
     public Map<String, String> decodeJwt(String encodedJWT){
         DecodedJWT decodedJWT = JWT.decode(encodedJWT);
         Map<String, String> decodeToken = new HashMap<String, String>();
-        decodeToken.put("login", String.valueOf(decodedJWT.getClaim("login")));
         decodeToken.put("role", String.valueOf(decodedJWT.getClaim("role")));
-        decodeToken.put("id", String.valueOf(decodedJWT.getSubject()));
+        decodeToken.put("username", String.valueOf(decodedJWT.getSubject()));
         return decodeToken;
         }
 

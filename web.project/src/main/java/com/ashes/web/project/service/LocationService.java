@@ -3,7 +3,7 @@ package com.ashes.web.project.service;
 import com.ashes.web.project.dto.LocationDto;
 import com.ashes.web.project.model.Location;
 import com.ashes.web.project.repository.LocationRepository;
-import com.ashes.web.project.service.ServiceInterface.LocationServiceInterface;
+import com.ashes.web.project.service.interfaces.LocationServiceInterface;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class LocationService implements LocationServiceInterface {
     @Override
     public ResponseEntity<String> add(LocationDto locationDto) {
         if (Stream.of(locationDto).allMatch(Objects::nonNull)) {
-            if (checkExistLocation(locationDto.getName())) {
+            if (isLocationExists(locationDto.getName())) {
                 return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
             }
             try {
@@ -60,7 +60,7 @@ public class LocationService implements LocationServiceInterface {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         try {
-            if (!checkExistLocation(name)) {
+            if (!isLocationExists(name)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
             return ResponseEntity.ok().body(locationRepository.findByNameAndReturnDto(name).get());
@@ -74,7 +74,7 @@ public class LocationService implements LocationServiceInterface {
     @Override
     public ResponseEntity<String> editLocation(LocationDto locationDto) {
         if (Stream.of(locationDto).allMatch(Objects::nonNull)) {
-            if (!checkExistLocation(locationDto.getName())) {
+            if (!isLocationExists(locationDto.getName())) {
                 return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
             }
             try {
@@ -91,7 +91,7 @@ public class LocationService implements LocationServiceInterface {
                             return ResponseEntity.status(HttpStatus.FOUND).body("Location name exists in system. Change name!");
                         }
                     }
-                    if (oldLocation.getMaxNumbers() != locationDto.getMaxNumbers() && !checkCapacity(locationDto.getMaxNumbers(), oldLocation.getFilled())) {
+                    if (oldLocation.getMaxCapacity() != locationDto.getMaxCapacity() && !isPlaceAvailable(locationDto.getMaxCapacity(), oldLocation.getFilled())) {
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Changing the size of the box is not possible. Exceeded the number of animals in it!");
                     }
                     locationRepository.save(editLocation.convert(editLocation, locationDto));
@@ -107,37 +107,32 @@ public class LocationService implements LocationServiceInterface {
     }
 
     @Override
-    public Boolean checkExistLocation(String locationName) {
+    public boolean isLocationExists(String locationName) {
         if (locationName == null || locationName.isEmpty()) {
             return false;
         }
-        try {
-            return locationRepository.findByNameAndReturnDto(locationName).isPresent();
-        } catch (DataAccessException e) {
-            log.info("Error connection DB: \n" + e.getMessage());
-            return false;
-        }
+        return locationRepository.findByName(locationName).isPresent();
     }
 
     @Override
-    public Boolean checkCapacity(Short sizeBox, Short currentFilled) {
-        if (sizeBox == null || currentFilled == null) {
-            return false;
-        }
-        return sizeBox >= currentFilled;
+    public boolean isPlaceAvailable(short maxCapacity, short currentFilled) {
+        return maxCapacity > currentFilled;
     }
 
     public Optional<LocationDto> getLocationDto(String nameLocation) {
         return locationRepository.findByNameAndReturnDto(nameLocation);
     }
 
-    public void addNewAnimalsForLocation(Location location, short newCount) {
-        location.setFilled(newCount);
-        try {
-            locationRepository.save(location);
-        } catch (DataAccessException e) {
-            log.info("Error connection DB: \n" + e.getMessage());
+    public void addAnimalToLocation(Location location) {
+        location.setFilled((short) (location.getFilled()+1));
+        locationRepository.save(location);
+    }
+
+    public Optional<Location> getLocation(String locationName) {
+        if (locationName != null || !locationName.isEmpty()) {
+            return locationRepository.findByName(locationName);
         }
+        return Optional.empty();
     }
 
 

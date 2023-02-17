@@ -1,6 +1,5 @@
 package com.ashes.web.project.model;
 
-import com.ashes.web.project.dto.AnimalDto;
 import com.ashes.web.project.dto.LocationDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,14 +21,14 @@ public class Location {
     private Long id;
     private String name;
     private String description;
-    private short maxNumbers;
+    private short maxCapacity;
     private short filled;
 
     public Location(LocationDto locationDto){
         this.id = locationDto.getId();
         this.description = locationDto.getDescription();
         this.name = locationDto.getName();
-        this.maxNumbers = locationDto.getMaxNumbers();
+        this.maxCapacity = locationDto.getMaxCapacity();
         this.filled = locationDto.getFilled();
     }
 
@@ -37,7 +36,7 @@ public class Location {
         location.id = locationDto.getId();
         location.description = locationDto.getDescription();
         location.name = locationDto.getName();
-        location.maxNumbers = locationDto.getMaxNumbers();
+        location.maxCapacity = locationDto.getMaxCapacity();
         location.filled = locationDto.getFilled();
         return location;
     }
