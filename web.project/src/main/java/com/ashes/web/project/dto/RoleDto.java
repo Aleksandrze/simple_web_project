@@ -13,6 +13,7 @@ import lombok.Setter;
 public class RoleDto {
     private Long id;
     private  String name;
+    private String accessToken;
 
     public RoleDto(Role Role){
         this.id = Role.getId();

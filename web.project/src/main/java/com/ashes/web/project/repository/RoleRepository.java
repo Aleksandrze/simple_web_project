@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query("select new com.ashes.web.project.dto.RoleDto(r) from Role r")
-    List<RoleDto> findAllAndReturnDto();
+    List<RoleDto> findAllAndReturnDtos();
 
     Optional<Role> findById(Long id);
 }

@@ -1,7 +1,7 @@
 package com.ashes.web.project.service;
 
 import com.ashes.web.project.dto.AnimalDto;
-import com.ashes.web.project.enumeration.PositionAnimalToShelter;
+import com.ashes.web.project.enumeration.AnimalStatus;
 import com.ashes.web.project.model.Animal;
 import com.ashes.web.project.model.Location;
 import com.ashes.web.project.repository.AnimalRepository;
@@ -17,9 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +30,7 @@ public class AnimalService implements AnimalServiceInterface {
 
     @Override
     public ResponseEntity<String> saveAnimal(AnimalDto animalDto) {
-        if (Stream.of(animalDto).allMatch(Objects::nonNull)) {
+        if (animalDto != null) {
             try {
                 Optional<Location> optionalLocation = locationService.getLocation(animalDto.getLocation());
                 if (optionalLocation.isPresent()) {
@@ -43,7 +41,7 @@ public class AnimalService implements AnimalServiceInterface {
                         if (optionalAnimal.isEmpty()) {
                             if (animalDto.getBirthdate().isBefore(LocalDate.now())) {
                                 Animal animal = new Animal(animalDto, location);
-                                animal.setPositionAnimalToShelter(PositionAnimalToShelter.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
+                                animal.setAnimalStatus(AnimalStatus.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
                                 animalRepository.save(animal);
                                 return ResponseEntity.ok().body("Animal information saved successfully.");
                             } else {
@@ -66,13 +64,13 @@ public class AnimalService implements AnimalServiceInterface {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
             }
         }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Required fields are not filled in!");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
     }
 
     @Override
     public ResponseEntity<List<AnimalDto>> getAllAnimals() {
         try {
-            return ResponseEntity.ok().body(animalRepository.findAllAndReturnDto());
+            return ResponseEntity.ok().body(animalRepository.findAllAndReturnDtos());
         } catch (DataAccessException e) {
             log.info("Error connection DB: \n" + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -96,11 +94,11 @@ public class AnimalService implements AnimalServiceInterface {
 
     @Override
     public ResponseEntity<List<AnimalDto>> getAllAnimalsByLocation(String location) {
-        if (!locationService.isLocationExists(location)) {
+        if (locationService.getLocation(location).isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         try {
-            return ResponseEntity.ok().body(animalRepository.findAllByLocation(location));
+            return ResponseEntity.ok().body(animalRepository.findAllByLocationName(location));
         } catch (DataAccessException e) {
             log.info("Error connection DB: \n" + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -109,7 +107,7 @@ public class AnimalService implements AnimalServiceInterface {
 
     @Override
     public ResponseEntity<String> modifyAnimal(AnimalDto animalDto) {
-        if (Stream.of(animalDto).allMatch(Objects::nonNull)) {
+        if (animalDto != null) {
             try {
                 Optional<Animal> optionalAnimal = animalRepository.findById(animalDto.getId());
                 if (optionalAnimal.isPresent()) {
@@ -142,7 +140,7 @@ public class AnimalService implements AnimalServiceInterface {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The date of birth cannot be in the future.");
                         }
                     }
-                    if (!checkAnimalStatus(animal.getPositionAnimalToShelter(), PositionAnimalToShelter.valueOf(animalDto.getStatus()))) {
+                    if (!checkAnimalStatus(animal.getAnimalStatus(), AnimalStatus.valueOf(animalDto.getStatus()))) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wrong Status change!!");
                     }
                     animalRepository.save(animal);
@@ -155,15 +153,15 @@ public class AnimalService implements AnimalServiceInterface {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Required fields are not filled in!");
             }
         }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Required fields are not filled in!");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
     }
 
-    public Boolean checkAnimalStatus(PositionAnimalToShelter oldPositionAnimalToShelter, PositionAnimalToShelter newPositionAnimalToShelter) {
-        return switch (oldPositionAnimalToShelter) {
+    public Boolean checkAnimalStatus(AnimalStatus oldAnimalStatus, AnimalStatus newAnimalStatus) {
+        return switch (oldAnimalStatus) {
             case POSITION_ANIMAL_TO_SHELTER_NOT_AVAILABLE -> true;
             case POSITION_ANIMAL_TO_SHELTER_IN_SHELTER -> true;
-            case POSITION_ANIMAL_TO_SHELTER_RESERVATION -> newPositionAnimalToShelter.equals(PositionAnimalToShelter.POSITION_ANIMAL_TO_SHELTER_ADOPTION) || newPositionAnimalToShelter.equals(PositionAnimalToShelter.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
-            case POSITION_ANIMAL_TO_SHELTER_ADOPTION -> newPositionAnimalToShelter.equals(PositionAnimalToShelter.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
+            case POSITION_ANIMAL_TO_SHELTER_RESERVATION -> newAnimalStatus.equals(AnimalStatus.ADOPTED_STATUS) || newAnimalStatus.equals(AnimalStatus.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
+            case ADOPTED_STATUS -> newAnimalStatus.equals(AnimalStatus.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
         };
     }
 }

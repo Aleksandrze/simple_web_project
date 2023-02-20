@@ -18,6 +18,7 @@ public class UserDto {
     private String lastName;
     @OneToMany
     private Role role;
+    private String accessToken;
 
     public UserDto(User user) {
         this.id = user.getId();

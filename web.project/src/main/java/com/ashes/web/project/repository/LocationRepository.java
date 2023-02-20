@@ -14,11 +14,11 @@ public interface LocationRepository extends JpaRepository<Location, Long> {
 
     Optional<Location> findByName(String name);
 
-    @Query("select new com.ashes.web.project.dto.LocationDto(l) from Location l where l.name = ?1")
-    Optional<LocationDto> findByNameAndReturnDto(String location);
+    @Query("select new com.ashes.web.project.dto.LocationDto(l) from Location l where l.name = :name")
+    Optional<LocationDto> findByNameAndReturnDto(String name);
 
     @Query("select new com.ashes.web.project.dto.LocationDto(l) from Location l")
-    List<LocationDto> findAllAndReturnDto();
+    List<LocationDto> findAllAndReturnDtos();
 
     Optional<Location> findById(Long id);
 

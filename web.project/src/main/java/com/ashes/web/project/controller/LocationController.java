@@ -1,6 +1,5 @@
 package com.ashes.web.project.controller;
 
-import com.ashes.web.project.dto.AnimalDto;
 import com.ashes.web.project.dto.LocationDto;
 import com.ashes.web.project.service.LocationService;
 import jakarta.validation.Valid;
@@ -19,21 +18,21 @@ public class LocationController {
 
     @PostMapping()
     public ResponseEntity<String> add(@RequestBody LocationDto locationDto){
-        return locationService.add(locationDto);
+        return locationService.saveLocation(locationDto);
     }
 
     @GetMapping()
     public ResponseEntity<List<LocationDto>> getAll() {
-        return locationService.getAll();
+        return locationService.getAllLocations();
     }
 
     @GetMapping("/get/{name}")
     public ResponseEntity<LocationDto> getByName(@Valid @PathVariable("name") String name) {
-        return locationService.getByName(name);
+        return locationService.getLocationByName(name);
     }
 
     @PatchMapping()
     public ResponseEntity<String> update(@RequestBody LocationDto locationDto){
-        return locationService.editLocation(locationDto);
+        return locationService.modifyLocation(locationDto);
     }
 }

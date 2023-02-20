@@ -13,13 +13,14 @@ import java.util.Optional;
 public interface AnimalRepository extends JpaRepository<Animal, Long> {
 
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a")
-    List<AnimalDto> findAllAndReturnDto();
+    List<AnimalDto> findAllAndReturnDtos();
 
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a where a.name = :name")
     Optional<AnimalDto> findByNameAndReturnDto(String shelterIdentifier);
 
+//    @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a.location.name join a.location l where l.name = :locationName")
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a join a.location l where l.name = :locationName")
-    List<AnimalDto> findAllByLocation(String locationName);
+    List<AnimalDto> findAllByLocationName(String locationName);
 
     Optional<Animal> findById(Long id);
 

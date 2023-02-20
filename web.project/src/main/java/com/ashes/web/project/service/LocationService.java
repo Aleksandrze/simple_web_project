@@ -4,6 +4,7 @@ import com.ashes.web.project.dto.LocationDto;
 import com.ashes.web.project.model.Location;
 import com.ashes.web.project.repository.LocationRepository;
 import com.ashes.web.project.service.interfaces.LocationServiceInterface;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,118 +14,104 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class LocationService implements LocationServiceInterface {
+
     private final LocationRepository locationRepository;
 
-    // ToDo change parameter in checkExistLocation Name -> id
     @Override
-    public ResponseEntity<String> add(LocationDto locationDto) {
-        if (Stream.of(locationDto).allMatch(Objects::nonNull)) {
-            if (isLocationExists(locationDto.getName())) {
-                return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
-            }
+    public ResponseEntity<String> saveLocation(LocationDto locationDto) {
+        if (locationDto != null) {
             try {
-                Location newLocation = new Location(locationDto);
-                newLocation.setFilled((short) 0);
-                locationRepository.save(newLocation);
-                return ResponseEntity.ok().body("Success");
+                Optional<Location> optionalLocation = locationRepository.findById(locationDto.getId());
+                if (optionalLocation.isEmpty()) {
+                    if (locationDto.getMaxCapacity() > 0) {
+                        locationRepository.save(new Location(locationDto));
+                        return ResponseEntity.ok().body("Success");
+                    } else {
+                        return ResponseEntity.status(HttpStatus.FOUND).body("The storage size cannot be less than 1");
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
+                }
+            } catch (PersistenceException e) {
+                log.info("Persistence exception occurred while trying to save new location");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
+    }
+
+    @Override
+    public ResponseEntity<List<LocationDto>> getAllLocations() {
+        try {
+            return ResponseEntity.ok().body(locationRepository.findAllAndReturnDtos());
+        } catch (DataAccessException e) {
+            log.info("Error connection DB: \n" + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @Override
+    public ResponseEntity<LocationDto> getLocationByName(String locationName) {
+        if (!locationName.isEmpty()) {
+            try {
+                return locationRepository.findByNameAndReturnDto(locationName)
+                        .map(locationDto -> ResponseEntity.ok().body(locationDto))
+                        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
             } catch (DataAccessException e) {
                 log.info("Error connection DB: \n" + e.getMessage());
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Fail");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
-        }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Required fields are not filled in!");
-    }
-
-    @Override
-    public ResponseEntity<List<LocationDto>> getAll() {
-        try {
-            return ResponseEntity.ok().body(locationRepository.findAllAndReturnDto());
-        } catch (DataAccessException e) {
-            log.info("Error connection DB: \n" + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
-
-    @Override
-    public ResponseEntity<LocationDto> getByName(String name) {
-        if (name == null || name.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-        try {
-            if (!isLocationExists(name)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.ok().body(locationRepository.findByNameAndReturnDto(name).get());
-        } catch (DataAccessException e) {
-            log.info("Error connection DB: \n" + e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-
     @Override
-    public ResponseEntity<String> editLocation(LocationDto locationDto) {
-        if (Stream.of(locationDto).allMatch(Objects::nonNull)) {
-            if (!isLocationExists(locationDto.getName())) {
-                return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
-            }
+    public ResponseEntity<String> modifyLocation(LocationDto locationDto) {
+        if (locationDto != null) {
             try {
-                Optional<Location> oldOptionalLocation = locationRepository.findById(locationDto.getId());
-                if (oldOptionalLocation.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Location name NOT_FOUND in system!");
-                } else {
-                    Location oldLocation = oldOptionalLocation.get();
-                    Location editLocation = new Location();
-                    if (!oldLocation.getName().equals(locationDto.getName())) {
-                        if (locationRepository.findByNameWithDifferentId(locationDto.getName(), oldLocation.getId()).isEmpty()) {
-                            editLocation = editLocation.convert(editLocation, locationDto);
+                Optional<Location> optionalLocation = locationRepository.findById(locationDto.getId());
+                if (optionalLocation.isPresent()) {
+                    Location location = optionalLocation.get();
+                    if (!location.getName().equals(locationDto.getName())) {
+                        if (locationRepository.findByNameWithDifferentId(locationDto.getName(), location.getId()).isEmpty()) {
+                            location.setName(locationDto.getName());
                         } else {
-                            return ResponseEntity.status(HttpStatus.FOUND).body("Location name exists in system. Change name!");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the name. This name is already in use");
                         }
                     }
-                    if (oldLocation.getMaxCapacity() != locationDto.getMaxCapacity() && !isPlaceAvailable(locationDto.getMaxCapacity(), oldLocation.getFilled())) {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Changing the size of the box is not possible. Exceeded the number of animals in it!");
+                    if (location.getMaxCapacity() != locationDto.getMaxCapacity() && location.getFilled() < locationDto.getMaxCapacity()) {
+                        location.setMaxCapacity(locationDto.getMaxCapacity());
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the number of seats. Exceeded the limit of animals in the location.");
                     }
-                    locationRepository.save(editLocation.convert(editLocation, locationDto));
-                    return ResponseEntity.ok().body("Success");
+                    locationRepository.save(location);
+                    return ResponseEntity.ok().body("Location modified successfully");
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The changeable location does not exist.");
                 }
-
             } catch (DataAccessException e) {
                 log.info("Error connection DB: \n" + e.getMessage());
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Fail");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Fail");
             }
         }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Required fields are not filled in!");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
     }
 
-    @Override
-    public boolean isLocationExists(String locationName) {
-        if (locationName == null || locationName.isEmpty()) {
-            return false;
-        }
-        return locationRepository.findByName(locationName).isPresent();
-    }
 
     @Override
     public boolean isPlaceAvailable(short maxCapacity, short currentFilled) {
         return maxCapacity > currentFilled;
     }
 
-    public Optional<LocationDto> getLocationDto(String nameLocation) {
-        return locationRepository.findByNameAndReturnDto(nameLocation);
-    }
-
     public void addAnimalToLocation(Location location) {
-        location.setFilled((short) (location.getFilled()+1));
+        location.setFilled((short) (location.getFilled() + 1));
         locationRepository.save(location);
     }
 

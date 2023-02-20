@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,9 +24,10 @@ public class RoleService implements RoleServiceInterface {
     private final RoleRepository roleRepository;
 
     @Override
-    public ResponseEntity<List<RoleDto>> getAll() {
+    // name
+    public ResponseEntity<List<RoleDto>> getAllRoles() {
         try {
-            return ResponseEntity.ok().body(roleRepository.findAllAndReturnDto());
+            return ResponseEntity.ok().body(roleRepository.findAllAndReturnDtos());
         } catch (DataAccessException e) {
             log.info("Error connection DB: \n" + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -33,12 +35,9 @@ public class RoleService implements RoleServiceInterface {
     }
 
     @Override
-    public Boolean checkExistRole(Long id) {
-        if (id == null) {
-            return false;
-        }
+    public Boolean isRoleExists(Long id) {
         try {
-            return roleRepository.findById(id).isPresent();
+            return Optional.ofNullable(id).map(roleId -> roleRepository.findById(roleId).isPresent()).orElse(false);
         } catch (DataAccessException e) {
             log.info("Error connection DB: \n" + e.getMessage());
             return false;
@@ -47,7 +46,7 @@ public class RoleService implements RoleServiceInterface {
 
     // temp method
     @Override
-    public ResponseEntity<Role> add(Role tRole) {
+    public ResponseEntity<Role> saveRole(Role tRole) {
         return ResponseEntity.ok().body(roleRepository.save(tRole));
     }
 

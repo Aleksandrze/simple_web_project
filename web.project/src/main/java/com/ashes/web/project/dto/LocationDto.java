@@ -16,6 +16,7 @@ public class LocationDto {
     private String description;
     private short maxCapacity;
     private short filled;
+    private String accessToken;
 
     public LocationDto(Location location) {
         this.id = location.getId();

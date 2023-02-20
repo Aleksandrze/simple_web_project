@@ -1,7 +1,7 @@
 package com.ashes.web.project.model;
 
 import com.ashes.web.project.dto.AnimalDto;
-import com.ashes.web.project.enumeration.PositionAnimalToShelter;
+import com.ashes.web.project.enumeration.AnimalStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +24,7 @@ public class Animal {
     @ManyToOne
     @JoinColumn(name = "location_id")
     private Location location;
-    private PositionAnimalToShelter positionAnimalToShelter;
+    private AnimalStatus animalStatus;
     private String description;
     private LocalDate birthdate;
     //private String category;
@@ -35,7 +35,7 @@ public class Animal {
         this.id = animalDto.getId();
         this.shelterIdentifier = animalDto.getShelterIdentifier();
         this.location = location;
-        this.positionAnimalToShelter = PositionAnimalToShelter.valueOf(animalDto.getStatus());
+        this.animalStatus = AnimalStatus.valueOf(animalDto.getStatus());
         this.description = animalDto.getDescription();
         this.birthdate = animalDto.getBirthdate();
         this.firstName = animalDto.getFirstName();

@@ -8,8 +8,9 @@ import java.util.List;
 
 public interface RoleServiceInterface {
 
-    ResponseEntity<List<RoleDto>> getAll();
-    Boolean checkExistRole(Long id);
+    ResponseEntity<List<RoleDto>> getAllRoles();
+
+    Boolean isRoleExists(Long id);
     // temp
-    ResponseEntity<Role> add(Role Role);
+    ResponseEntity<Role> saveRole(Role Role);
 }

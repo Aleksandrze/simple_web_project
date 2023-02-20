@@ -20,12 +20,13 @@ public class AnimalDto {
     private String description;
     private LocalDate birthdate;
     private String firstName;
+    private String accessToken;
 
     public AnimalDto(Animal animal) {
         this.id = animal.getId();
         this.shelterIdentifier = animal.getShelterIdentifier();
         this.location = animal.getLocation().getName();
-        this.status = animal.getPositionAnimalToShelter().getStatus();
+        this.status = animal.getAnimalStatus().getStatus();
         this.description = animal.getDescription();
         this.birthdate = animal.getBirthdate();
         this.firstName = animal.getFirstName();

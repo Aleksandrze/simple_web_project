@@ -1,18 +1,19 @@
 package com.ashes.web.project.service.interfaces;
+
 import com.ashes.web.project.dto.LocationDto;
 import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 
 public interface LocationServiceInterface {
-    ResponseEntity<String> add(LocationDto locationDto);
 
-    ResponseEntity<List<LocationDto>> getAll();
+    ResponseEntity<String> saveLocation(LocationDto locationDto);
 
-    ResponseEntity<LocationDto> getByName(String name);
+    ResponseEntity<List<LocationDto>> getAllLocations();
 
-    ResponseEntity<String> editLocation(LocationDto locationDto);
+    ResponseEntity<LocationDto> getLocationByName(String locationName);
 
-    boolean isLocationExists(String locationName);
+    ResponseEntity<String> modifyLocation(LocationDto locationDto);
 
     boolean isPlaceAvailable(short currentSizeBox, short currentFilled);
 
