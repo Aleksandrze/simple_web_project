@@ -16,6 +16,10 @@ public class Role {
     private Long id;
     private String name;
 
+    public Role(Role role){
+        this.id = role.getId();
+        this.name = role.getName();
+    }
     public Role(RoleDto roleDto){
         this.id = roleDto.getId();
         this.name = roleDto.getName();

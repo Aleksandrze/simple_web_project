@@ -28,8 +28,7 @@ public class Animal {
     private String description;
     private LocalDate birthdate;
     //private String category;
-    @Column(columnDefinition = "-")
-    private String firstName;
+    private String firstName="-";
 
     public Animal(AnimalDto animalDto, Location location) {
         this.id = animalDto.getId();

@@ -15,10 +15,9 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a")
     List<AnimalDto> findAllAndReturnDtos();
 
-    @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a where a.name = :name")
+    @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a where a.shelterIdentifier = :shelterIdentifier")
     Optional<AnimalDto> findByNameAndReturnDto(String shelterIdentifier);
 
-//    @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a.location.name join a.location l where l.name = :locationName")
     @Query("select new com.ashes.web.project.dto.AnimalDto(a) from Animal a join a.location l where l.name = :locationName")
     List<AnimalDto> findAllByLocationName(String locationName);
 
@@ -27,6 +26,6 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
     @Query("select a from Animal a where a.shelterIdentifier = :shelterIdentifier")
     Optional<Animal> findByShelterIdentifier(String shelterIdentifier);
 
-    @Query("select a from Animal a where a.name= :name and a.id <> :id")
+    @Query("select a from Animal a where a.shelterIdentifier= :shelterIdentifier and a.id <> :id")
     Optional<Animal> findByNameWithDifferentId(String shelterIdentifier, Long id);
 }

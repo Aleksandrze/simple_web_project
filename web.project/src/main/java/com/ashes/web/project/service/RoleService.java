@@ -24,7 +24,6 @@ public class RoleService implements RoleServiceInterface {
     private final RoleRepository roleRepository;
 
     @Override
-    // name
     public ResponseEntity<List<RoleDto>> getAllRoles() {
         try {
             return ResponseEntity.ok().body(roleRepository.findAllAndReturnDtos());
@@ -42,6 +41,10 @@ public class RoleService implements RoleServiceInterface {
             log.info("Error connection DB: \n" + e.getMessage());
             return false;
         }
+    }
+
+    public Role getRoleByName(String roleName) {
+        return roleRepository.findByName(roleName);
     }
 
     // temp method

@@ -6,6 +6,7 @@ import com.ashes.web.project.domain.JwtRequest;
 import com.ashes.web.project.domain.JwtResponse;
 import com.ashes.web.project.dto.RoleDto;
 import com.ashes.web.project.dto.UserDto;
+import com.ashes.web.project.model.Role;
 import com.ashes.web.project.model.User;
 import com.ashes.web.project.repository.UserRepository;
 import com.ashes.web.project.service.interfaces.UserServiceInterface;
@@ -27,13 +28,30 @@ import java.util.Optional;
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;
+    private final RoleService roleService;
     private final JwtProvider jwtProvider;
 
     @Override
     public ResponseEntity<String> saveUser(UserDto userDto) {
-        // temporary realization
-        userRepository.save(new User(userDto));
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        if (userDto != null) {
+            try {
+                if (userRepository.findByLogin(userDto.getLogin()).isEmpty()) {
+                    if (!userDto.anyNull(userDto)) {
+                        User newUser = new User(userDto);
+                        newUser.setRole(new Role(roleService.getRoleByName("USER")));
+                        userRepository.save(newUser);
+                        return ResponseEntity.status(HttpStatus.OK).build();
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.FOUND).build();
+                }
+            } catch (DataAccessException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @Override
@@ -41,7 +59,7 @@ public class UserService implements UserServiceInterface {
         if (!authRequest.getLogin().isEmpty() && !authRequest.getPassword().isEmpty()) {
             try {
                 Optional<User> optionalUser = userRepository.findByLogin(authRequest.getLogin());
-                if(optionalUser.isPresent()) {
+                if (optionalUser.isPresent()) {
                     User user = optionalUser.get();
                     if (user.getPassword().equals(authRequest.getPassword())) {
                         return ResponseEntity.ok().body(new JwtResponse(jwtProvider.generateAccessToken(user)));
@@ -95,30 +113,96 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public ResponseEntity<List<UserDto>> getAllUsesByRole(RoleDto roleDto) {
-        if(roleDto != null){
-           String username =  jwtProvider.decodeJwt(roleDto.getAccessToken());
-           Optional<User> user = userRepository.findByLogin(username);
-           if(user.isPresent()){
-               if(!user.get().getRole().getName().equals("USER")){
-                   return ResponseEntity.ok().body(userRepository.findAllByRoleAndReturnDtos(roleDto.getId()));
-               }else {
-                   return null;
-               }
-           }else {
-               return null;
-           }
+        if (roleDto != null) {
+            String username = jwtProvider.decodeJwt(roleDto.getAccessToken());
+            try {
+                Optional<User> user = userRepository.findByLogin(username);
+                if (user.isPresent()) {
+                    if (!user.get().getRole().getName().equals("USER")) {
+                        return ResponseEntity.ok().body(userRepository.findAllByRoleAndReturnDtos(roleDto.getId()));
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
+            } catch (DataAccessException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
         }
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @Override
     public ResponseEntity<String> changeUsersRole(UserDto userDto, RoleDto newRoleDto) {
-        return null;
+        if (userDto != null && newRoleDto != null) {
+            String adminUser = jwtProvider.decodeJwt(userDto.getAccessToken());
+            try {
+                Optional<User> optionalAdminUser = userRepository.findByLogin(adminUser);
+                if (optionalAdminUser.isPresent()) {
+                    if (optionalAdminUser.get().getRole().getName().equals("ADMIN")) {
+                        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
+                        if (optionalUser.isPresent() && !optionalUser.get().getLogin().equals(optionalAdminUser.get().getLogin())) {
+                            User modifyUser = optionalUser.get();
+                            modifyUser.setRole(new Role(newRoleDto));
+                            userRepository.save(modifyUser);
+                            return ResponseEntity.status(HttpStatus.OK).build();
+                        } else {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                        }
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
+            } catch (DataAccessException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @Override
     public ResponseEntity<UserDto> modifyUser(UserDto userDto) {
-        return null;
+        if (userDto != null) {
+            try {
+                Optional<User> optionalUser = userRepository.findById(userDto.getId());
+                if (optionalUser.isPresent()) {
+                    User user = optionalUser.get();
+                    if (!user.getLogin().equals(userDto.getLogin())) {
+                        if (userRepository.findByNameWithDifferentId(userDto.getLogin(), user.getId()).isEmpty()) {
+                            user.setLogin(userDto.getLogin());
+                        } else {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                        }
+                    }
+                    userRepository.save(user);
+                    return ResponseEntity.ok().body(new UserDto(user));
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                }
+            } catch (DataAccessException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
+    public String checkUserPrivileges(String accessToken) {
+        String adminUser = jwtProvider.decodeJwt(accessToken);
+        if (!adminUser.isEmpty()) {
+            try {
+                Optional<User> optionalUser = userRepository.findByLogin(adminUser);
+                if (optionalUser.isPresent()) {
+                    return optionalUser.get().getRole().getName();
+                } else {
+                    return "USER";
+                }
+            } catch (DataAccessException e) {
+                return "USER";
+            }
+        }
+        return "USER";
+    }
 }

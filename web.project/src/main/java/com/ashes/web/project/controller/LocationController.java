@@ -17,7 +17,7 @@ public class LocationController {
     private final LocationService locationService;
 
     @PostMapping()
-    public ResponseEntity<String> add(@RequestBody LocationDto locationDto){
+    public ResponseEntity<String> add(@RequestBody LocationDto locationDto) {
         return locationService.saveLocation(locationDto);
     }
 
@@ -32,7 +32,7 @@ public class LocationController {
     }
 
     @PatchMapping()
-    public ResponseEntity<String> update(@RequestBody LocationDto locationDto){
+    public ResponseEntity<String> update(@RequestBody LocationDto locationDto) {
         return locationService.modifyLocation(locationDto);
     }
 }

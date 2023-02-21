@@ -1,5 +1,6 @@
 package com.ashes.web.project.service;
 
+import com.ashes.web.project.component.JwtProvider;
 import com.ashes.web.project.dto.AnimalDto;
 import com.ashes.web.project.enumeration.AnimalStatus;
 import com.ashes.web.project.model.Animal;
@@ -27,41 +28,46 @@ public class AnimalService implements AnimalServiceInterface {
 
     private final AnimalRepository animalRepository;
     private final LocationService locationService;
+    private final JwtProvider jwtProvider;
+    private final UserService userService;
 
+    // modify SecurityConfig
     @Override
     public ResponseEntity<String> saveAnimal(AnimalDto animalDto) {
         if (animalDto != null) {
-            try {
-                Optional<Location> optionalLocation = locationService.getLocation(animalDto.getLocation());
-                if (optionalLocation.isPresent()) {
-                    Location location = optionalLocation.get();
-                    if (locationService.isPlaceAvailable(location.getMaxCapacity(), location.getFilled())) {
-                        locationService.addAnimalToLocation(location);
-                        Optional<Animal> optionalAnimal = animalRepository.findByShelterIdentifier(animalDto.getShelterIdentifier());
-                        if (optionalAnimal.isEmpty()) {
-                            if (animalDto.getBirthdate().isBefore(LocalDate.now())) {
-                                Animal animal = new Animal(animalDto, location);
-                                animal.setAnimalStatus(AnimalStatus.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
-                                animalRepository.save(animal);
-                                return ResponseEntity.ok().body("Animal information saved successfully.");
+            if (!userService.checkUserPrivileges(jwtProvider.decodeJwt(animalDto.getAccessToken())).equals("USER")) {
+                try {
+                    Optional<Location> optionalLocation = locationService.getLocation(animalDto.getLocation());
+                    if (optionalLocation.isPresent()) {
+                        Location location = optionalLocation.get();
+                        if (locationService.isPlaceAvailable(location.getMaxCapacity(), location.getFilled())) {
+                            locationService.addAnimalToLocation(location);
+                            Optional<Animal> optionalAnimal = animalRepository.findByShelterIdentifier(animalDto.getShelterIdentifier());
+                            if (optionalAnimal.isEmpty()) {
+                                if (animalDto.getBirthdate().isBefore(LocalDate.now())) {
+                                    Animal animal = new Animal(animalDto, location);
+                                    animal.setAnimalStatus(AnimalStatus.POSITION_ANIMAL_TO_SHELTER_IN_SHELTER);
+                                    animalRepository.save(animal);
+                                    return ResponseEntity.ok().body("Animal information saved successfully.");
+                                } else {
+                                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The date of birth cannot be in the future.");
+                                }
                             } else {
-                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The date of birth cannot be in the future.");
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("An animal with this shelter ID already exists.");
                             }
                         } else {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("An animal with this shelter ID already exists.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no available place in selected location.");
                         }
                     } else {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("There is no available place in selected location.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Location does not exists!");
                     }
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Location does not exists!");
+                } catch (DataAccessException e) {
+                    log.info("Error connection DB: \n" + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Fail");
+                } catch (PersistenceException e) {
+                    log.info("Persistence exception occurred while trying to save new animal");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
                 }
-            } catch (DataAccessException e) {
-                log.info("Error connection DB: \n" + e.getMessage());
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Fail");
-            } catch (PersistenceException e) {
-                log.info("Persistence exception occurred while trying to save new animal");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
@@ -77,21 +83,23 @@ public class AnimalService implements AnimalServiceInterface {
         }
     }
 
+    // modify SecurityConfig
     @Override
     public ResponseEntity<AnimalDto> getAnimalByShelterIdentifier(String shelterIdentifier) {
-        if (shelterIdentifier == null || shelterIdentifier.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-        try {
-            return animalRepository.findByNameAndReturnDto(shelterIdentifier)
-                    .map(animal -> ResponseEntity.ok().body(animal))
-                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-        } catch (DataAccessException e) {
-            log.info("Error connection DB: \n" + e.getMessage());
+        if (!shelterIdentifier.isEmpty()) {
+            try {
+                return animalRepository.findByNameAndReturnDto(shelterIdentifier)
+                        .map(animal -> ResponseEntity.ok().body(animal))
+                        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+            } catch (DataAccessException e) {
+                log.info("Error connection DB: \n" + e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
+    // modify SecurityConfig
     @Override
     public ResponseEntity<List<AnimalDto>> getAllAnimalsByLocation(String location) {
         if (locationService.getLocation(location).isEmpty()) {
@@ -105,6 +113,7 @@ public class AnimalService implements AnimalServiceInterface {
         }
     }
 
+    // modify SecurityConfig
     @Override
     public ResponseEntity<String> modifyAnimal(AnimalDto animalDto) {
         if (animalDto != null) {

@@ -28,7 +28,7 @@ public class LocationService implements LocationServiceInterface {
     public ResponseEntity<String> saveLocation(LocationDto locationDto) {
         if (locationDto != null) {
             try {
-                Optional<Location> optionalLocation = locationRepository.findById(locationDto.getId());
+                Optional<Location> optionalLocation = locationRepository.findByName(locationDto.getName());
                 if (optionalLocation.isEmpty()) {
                     if (locationDto.getMaxCapacity() > 0) {
                         locationRepository.save(new Location(locationDto));
