@@ -1,15 +1,13 @@
 package com.ashes.web.project.dto;
 
 import com.ashes.web.project.model.Location;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class LocationDto {
     private Long id;
     private String name;
@@ -25,4 +23,5 @@ public class LocationDto {
         this.filled = location.getFilled();
         this.maxCapacity = location.getMaxCapacity();
     }
+
 }

@@ -35,12 +35,12 @@ public class UserService implements UserServiceInterface {
     public ResponseEntity<String> saveUser(UserDto userDto) {
         if (userDto != null) {
             try {
-                if (userRepository.findByLogin(userDto.getLogin()).isEmpty()) {
+                if (userRepository.findByUsername(userDto.getUsername()).isEmpty()) {
                     if (!userDto.anyNull(userDto)) {
                         User newUser = new User(userDto);
-                        newUser.setRole(new Role(roleService.getRoleByName("USER")));
+                        newUser.setRole(roleService.getRoleByName("USER"));
                         userRepository.save(newUser);
-                        return ResponseEntity.status(HttpStatus.OK).build();
+                        return ResponseEntity.status(HttpStatus.OK).body("Success");
                     } else {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
                     }
@@ -58,7 +58,7 @@ public class UserService implements UserServiceInterface {
     public ResponseEntity<JwtResponse> login(JwtRequest authRequest) {
         if (!authRequest.getLogin().isEmpty() && !authRequest.getPassword().isEmpty()) {
             try {
-                Optional<User> optionalUser = userRepository.findByLogin(authRequest.getLogin());
+                Optional<User> optionalUser = userRepository.findByUsername(authRequest.getLogin());
                 if (optionalUser.isPresent()) {
                     User user = optionalUser.get();
                     if (user.getPassword().equals(authRequest.getPassword())) {
@@ -79,19 +79,19 @@ public class UserService implements UserServiceInterface {
 
 
     @Override
-    public Optional<User> getUserByLogin(String login) {
+    public Optional<User> getUserByUsername(String username) {
         try {
-            return userRepository.findByLogin(login);
+            return userRepository.findByUsername(username);
         } catch (DataAccessException e) {
             return Optional.empty();
         }
     }
 
     @Override
-    public ResponseEntity<UserDto> getUserByLoginAndReturnDto(String login) {
-        if (!login.isEmpty()) {
+    public ResponseEntity<UserDto> getUserByUsernameAndReturnDto(String username) {
+        if (!username.isEmpty()) {
             try {
-                return userRepository.findByLoginAndReturnDto(login)
+                return userRepository.findByLoginAndReturnDto(username)
                         .map(userDto -> ResponseEntity.ok().body(userDto))
                         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
             } catch (DataAccessException e) {
@@ -116,7 +116,7 @@ public class UserService implements UserServiceInterface {
         if (roleDto != null) {
             String username = jwtProvider.decodeJwt(roleDto.getAccessToken());
             try {
-                Optional<User> user = userRepository.findByLogin(username);
+                Optional<User> user = userRepository.findByUsername(username);
                 if (user.isPresent()) {
                     if (!user.get().getRole().getName().equals("USER")) {
                         return ResponseEntity.ok().body(userRepository.findAllByRoleAndReturnDtos(roleDto.getId()));
@@ -138,11 +138,11 @@ public class UserService implements UserServiceInterface {
         if (userDto != null && newRoleDto != null) {
             String adminUser = jwtProvider.decodeJwt(userDto.getAccessToken());
             try {
-                Optional<User> optionalAdminUser = userRepository.findByLogin(adminUser);
+                Optional<User> optionalAdminUser = userRepository.findByUsername(adminUser);
                 if (optionalAdminUser.isPresent()) {
                     if (optionalAdminUser.get().getRole().getName().equals("ADMIN")) {
-                        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-                        if (optionalUser.isPresent() && !optionalUser.get().getLogin().equals(optionalAdminUser.get().getLogin())) {
+                        Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
+                        if (optionalUser.isPresent() && !optionalUser.get().getUsername().equals(optionalAdminUser.get().getUsername())) {
                             User modifyUser = optionalUser.get();
                             modifyUser.setRole(new Role(newRoleDto));
                             userRepository.save(modifyUser);
@@ -170,9 +170,9 @@ public class UserService implements UserServiceInterface {
                 Optional<User> optionalUser = userRepository.findById(userDto.getId());
                 if (optionalUser.isPresent()) {
                     User user = optionalUser.get();
-                    if (!user.getLogin().equals(userDto.getLogin())) {
-                        if (userRepository.findByNameWithDifferentId(userDto.getLogin(), user.getId()).isEmpty()) {
-                            user.setLogin(userDto.getLogin());
+                    if (!user.getUsername().equals(userDto.getUsername())) {
+                        if (userRepository.findByNameWithDifferentId(userDto.getUsername(), user.getId()).isEmpty()) {
+                            user.setUsername(userDto.getUsername());
                         } else {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
                         }
@@ -193,7 +193,7 @@ public class UserService implements UserServiceInterface {
         String adminUser = jwtProvider.decodeJwt(accessToken);
         if (!adminUser.isEmpty()) {
             try {
-                Optional<User> optionalUser = userRepository.findByLogin(adminUser);
+                Optional<User> optionalUser = userRepository.findByUsername(adminUser);
                 if (optionalUser.isPresent()) {
                     return optionalUser.get().getRole().getName();
                 } else {

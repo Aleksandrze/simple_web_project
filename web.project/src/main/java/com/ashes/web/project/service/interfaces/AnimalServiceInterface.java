@@ -11,10 +11,10 @@ public interface AnimalServiceInterface {
 
     ResponseEntity<List<AnimalDto>> getAllAnimals();
 
-    ResponseEntity<AnimalDto> getAnimalByShelterIdentifier(String shelterIdentifier);
+    ResponseEntity<AnimalDto> getAnimalByShelterIdentifier(String shelterIdentifier, String accessToken);
 
     ResponseEntity<String> modifyAnimal(AnimalDto animalDto);
 
-    ResponseEntity<List<AnimalDto>> getAllAnimalsByLocation(String location);
+    ResponseEntity<List<AnimalDto>> getAllAnimalsByLocation(String location, String accessToken);
 
 }

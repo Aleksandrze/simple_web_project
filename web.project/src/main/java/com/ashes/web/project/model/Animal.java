@@ -34,7 +34,7 @@ public class Animal {
         this.id = animalDto.getId();
         this.shelterIdentifier = animalDto.getShelterIdentifier();
         this.location = location;
-        this.animalStatus = AnimalStatus.valueOf(animalDto.getStatus());
+        this.animalStatus = AnimalStatus.valueOfLabel(animalDto.getStatus());
         this.description = animalDto.getDescription();
         this.birthdate = animalDto.getBirthdate();
         this.firstName = animalDto.getFirstName();

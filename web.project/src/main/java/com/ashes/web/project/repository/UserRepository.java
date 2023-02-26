@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select new com.ashes.web.project.dto.UserDto(a) from User a where a.login = :login")
     Optional<UserDto> findByLoginAndReturnDto(String login);
 
-    Optional<User> findByLogin(String login);
+    Optional<User> findByUsername(String username);
 
     @Query("select new com.ashes.web.project.dto.UserDto(a) from User a")
     List<UserDto> findAllAndReturnDtos();

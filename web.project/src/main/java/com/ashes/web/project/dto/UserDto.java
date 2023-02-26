@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 @NoArgsConstructor
 public class UserDto {
     private Long id;
-    private String login;
+    private String username;
     private String password;
     private String firstName;
     private String lastName;
@@ -27,7 +27,7 @@ public class UserDto {
 
     public UserDto(User user) {
         this.id = user.getId();
-        this.login = user.getLogin();
+        this.username = user.getUsername();
         this.password = user.getPassword();
         this.role = user.getRole();
         this.firstName = user.getFirstName();

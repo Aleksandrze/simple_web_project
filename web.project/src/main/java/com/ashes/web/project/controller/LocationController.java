@@ -2,7 +2,6 @@ package com.ashes.web.project.controller;
 
 import com.ashes.web.project.dto.LocationDto;
 import com.ashes.web.project.service.LocationService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -27,7 +26,7 @@ public class LocationController {
     }
 
     @GetMapping("/get/{name}")
-    public ResponseEntity<LocationDto> getByName(@Valid @PathVariable("name") String name) {
+    public ResponseEntity<LocationDto> getByName(@PathVariable("name") String name) {
         return locationService.getLocationByName(name);
     }
 

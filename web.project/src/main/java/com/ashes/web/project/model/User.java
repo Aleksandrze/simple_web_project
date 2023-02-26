@@ -16,7 +16,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String login;
+    private String username;
     private String password;
     private String firstName;
     private String lastName;
@@ -30,7 +30,7 @@ public class User {
 
     public User(UserDto userDto) {
         this.id = userDto.getId();
-        this.login = userDto.getLogin();
+        this.username = userDto.getUsername();
         this.password = userDto.getPassword();
         this.role = userDto.getRole();
         this.firstName = userDto.getFirstName();

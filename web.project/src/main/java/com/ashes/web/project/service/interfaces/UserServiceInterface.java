@@ -15,8 +15,8 @@ import java.util.Optional;
 public interface UserServiceInterface {
 
     ResponseEntity<JwtResponse> login(JwtRequest authRequest) throws AuthException;
-    Optional<User> getUserByLogin(String login);
-    ResponseEntity<UserDto> getUserByLoginAndReturnDto(String login);
+    Optional<User> getUserByUsername(String login);
+    ResponseEntity<UserDto> getUserByUsernameAndReturnDto(String username);
     ResponseEntity<List<UserDto>> getAllUsers();
     ResponseEntity<String> saveUser(UserDto userDto);
     ResponseEntity<List<UserDto>> getAllUsesByRole(RoleDto roleDto);

@@ -1,5 +1,6 @@
 package com.ashes.web.project.service;
 
+import com.ashes.web.project.component.JwtProvider;
 import com.ashes.web.project.dto.LocationDto;
 import com.ashes.web.project.model.Location;
 import com.ashes.web.project.repository.LocationRepository;
@@ -23,25 +24,29 @@ import java.util.Optional;
 public class LocationService implements LocationServiceInterface {
 
     private final LocationRepository locationRepository;
+    private final UserService userService;
+    private final JwtProvider jwtProvider;
 
     @Override
     public ResponseEntity<String> saveLocation(LocationDto locationDto) {
         if (locationDto != null) {
-            try {
-                Optional<Location> optionalLocation = locationRepository.findByName(locationDto.getName());
-                if (optionalLocation.isEmpty()) {
-                    if (locationDto.getMaxCapacity() > 0) {
-                        locationRepository.save(new Location(locationDto));
-                        return ResponseEntity.ok().body("Success");
+            if (!userService.checkUserPrivileges(jwtProvider.decodeJwt(locationDto.getAccessToken())).equals("USER")) {
+                try {
+                    Optional<Location> optionalLocation = locationRepository.findByName(locationDto.getName());
+                    if (optionalLocation.isEmpty()) {
+                        if (locationDto.getMaxCapacity() > 0) {
+                            locationRepository.save(new Location(locationDto));
+                            return ResponseEntity.ok().body("Success");
+                        } else {
+                            return ResponseEntity.status(HttpStatus.FOUND).body("The storage size cannot be less than 1");
+                        }
                     } else {
-                        return ResponseEntity.status(HttpStatus.FOUND).body("The storage size cannot be less than 1");
+                        return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
                     }
-                } else {
-                    return ResponseEntity.status(HttpStatus.FOUND).body("Location exists!");
+                } catch (PersistenceException e) {
+                    log.info("Persistence exception occurred while trying to save new location");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
                 }
-            } catch (PersistenceException e) {
-                log.info("Persistence exception occurred while trying to save new location");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
@@ -75,30 +80,34 @@ public class LocationService implements LocationServiceInterface {
     @Override
     public ResponseEntity<String> modifyLocation(LocationDto locationDto) {
         if (locationDto != null) {
-            try {
-                Optional<Location> optionalLocation = locationRepository.findById(locationDto.getId());
-                if (optionalLocation.isPresent()) {
-                    Location location = optionalLocation.get();
-                    if (!location.getName().equals(locationDto.getName())) {
-                        if (locationRepository.findByNameWithDifferentId(locationDto.getName(), location.getId()).isEmpty()) {
-                            location.setName(locationDto.getName());
-                        } else {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the name. This name is already in use");
+            if (!userService.checkUserPrivileges(jwtProvider.decodeJwt(locationDto.getAccessToken())).equals("USER")) {
+                try {
+                    Optional<Location> optionalLocation = locationRepository.findById(locationDto.getId());
+                    if (optionalLocation.isPresent()) {
+                        Location location = optionalLocation.get();
+                        if (!location.getName().equals(locationDto.getName())) {
+                            if (locationRepository.findByNameWithDifferentId(locationDto.getName(), location.getId()).isEmpty()) {
+                                location.setName(locationDto.getName());
+                            } else {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the name. This name is already in use");
+                            }
                         }
-                    }
-                    if (location.getMaxCapacity() != locationDto.getMaxCapacity() && location.getFilled() < locationDto.getMaxCapacity()) {
-                        location.setMaxCapacity(locationDto.getMaxCapacity());
+                        if (location.getMaxCapacity() != locationDto.getMaxCapacity()) {
+                            if (location.getFilled() < locationDto.getMaxCapacity()) {
+                                location.setMaxCapacity(locationDto.getMaxCapacity());
+                            } else {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the number of seats. Exceeded the limit of animals in the location.");
+                            }
+                        }
+                        locationRepository.save(location);
+                        return ResponseEntity.ok().body("Location modified successfully");
                     } else {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("It is not possible to change the number of seats. Exceeded the limit of animals in the location.");
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The changeable location does not exist.");
                     }
-                    locationRepository.save(location);
-                    return ResponseEntity.ok().body("Location modified successfully");
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The changeable location does not exist.");
+                } catch (DataAccessException e) {
+                    log.info("Error connection DB: \n" + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Fail");
                 }
-            } catch (DataAccessException e) {
-                log.info("Error connection DB: \n" + e.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Fail");
             }
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message.");
@@ -116,7 +125,7 @@ public class LocationService implements LocationServiceInterface {
     }
 
     public Optional<Location> getLocation(String locationName) {
-        if (locationName != null || !locationName.isEmpty()) {
+        if (!locationName.isEmpty()) {
             return locationRepository.findByName(locationName);
         }
         return Optional.empty();

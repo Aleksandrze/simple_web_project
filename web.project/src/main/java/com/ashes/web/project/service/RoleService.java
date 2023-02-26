@@ -4,7 +4,6 @@ import com.ashes.web.project.dto.RoleDto;
 import com.ashes.web.project.model.Role;
 import com.ashes.web.project.repository.RoleRepository;
 import com.ashes.web.project.service.interfaces.RoleServiceInterface;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -17,7 +16,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class RoleService implements RoleServiceInterface {
 
@@ -45,12 +43,6 @@ public class RoleService implements RoleServiceInterface {
 
     public Role getRoleByName(String roleName) {
         return roleRepository.findByName(roleName);
-    }
-
-    // temp method
-    @Override
-    public ResponseEntity<Role> saveRole(Role tRole) {
-        return ResponseEntity.ok().body(roleRepository.save(tRole));
     }
 
 }

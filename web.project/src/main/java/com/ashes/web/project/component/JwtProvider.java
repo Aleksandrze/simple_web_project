@@ -31,7 +31,7 @@ public class JwtProvider {
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(String.valueOf(user.getLogin())) // login/username
+                .setSubject(String.valueOf(user.getUsername())) // login/username
                 .setExpiration(Date.from(LocalDateTime.now().plusMinutes(15).atZone(ZoneId.systemDefault()).toInstant()))
                 .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(String.valueOf(jwtAccessSecret))))
                 .compact();

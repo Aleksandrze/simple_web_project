@@ -32,7 +32,7 @@ public class UserController {
 
     @GetMapping()
     public ResponseEntity<UserDto> getByName(@RequestParam String name) {
-        return userService.getUserByLoginAndReturnDto(name);
+        return userService.getUserByUsernameAndReturnDto(name);
     }
 
     @GetMapping("/role")
@@ -46,7 +46,7 @@ public class UserController {
     }
 
     @PutMapping("/role")
-    public ResponseEntity<String> update(@RequestBody UserRoleRequest userRoleRequest) {
+    public ResponseEntity<String> updateRole(@RequestBody UserRoleRequest userRoleRequest) {
         return userService.changeUsersRole(userRoleRequest.getUserDto(), userRoleRequest.getRoleDto());
     }
 

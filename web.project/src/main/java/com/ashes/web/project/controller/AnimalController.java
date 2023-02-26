@@ -26,13 +26,13 @@ public class AnimalController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<AnimalDto> getByName(@RequestParam String name) {
-        return animalService.getAnimalByShelterIdentifier(name);
+    public ResponseEntity<AnimalDto> getByName(@RequestParam String name ,@RequestParam String accessToken) {
+        return animalService.getAnimalByShelterIdentifier(name, accessToken);
     }
 
     @GetMapping("/get/location")
-    public ResponseEntity<List<AnimalDto>> getByLocation(@RequestParam String location) {
-        return animalService.getAllAnimalsByLocation(location);
+    public ResponseEntity<List<AnimalDto>> getByLocation(@RequestParam String location,@RequestParam String accessToken) {
+        return animalService.getAllAnimalsByLocation(location, accessToken);
     }
 
     @PutMapping()
